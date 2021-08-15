@@ -1,10 +1,11 @@
+from oauth2_provider.views import TokenView
 from rest_framework import status
 from rest_framework.generics import CreateAPIView, RetrieveUpdateAPIView, ListAPIView
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.response import Response
 
 from post.models import Profile, Categories
-from post.serializers import ProfileSerializers, CategorySerializers
+from post.serializers import ProfileSerializers, CategorySerializers, CreateUserSerializer
 
 
 class CategoriesViewCreateUpdate(ListAPIView):
@@ -61,3 +62,8 @@ class ProfileDetailUpdate(RetrieveUpdateAPIView):
             'message': 'Your not authorized to edit this!'
         }
         return Response(data, status=status.HTTP_401_UNAUTHORIZED)
+
+
+class CreateUser(CreateAPIView, TokenView):
+    serializer_class = CreateUserSerializer
+    permission_classes = (AllowAny,)
