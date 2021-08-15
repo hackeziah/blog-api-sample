@@ -1,17 +1,15 @@
 from rest_framework import status
-from rest_framework.generics import CreateAPIView, RetrieveUpdateAPIView
+from rest_framework.generics import CreateAPIView, RetrieveUpdateAPIView, ListAPIView
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
-from post.models import Profile
+from post.models import Profile, Categories
 from post.serializers import ProfileSerializers, CategorySerializers
 
 
-class CategoriesViewCreateUpdate(CreateAPIView):
-    queryset = CategorySerializers
-
-    def post(self, request, *args, **kwargs):
-        return self.create(request, *args, **kwargs)
+class CategoriesViewCreateUpdate(ListAPIView):
+    serializer_class = CategorySerializers
+    queryset = Categories.objects.all()
 
 
 class ProfileDetailUpdate(RetrieveUpdateAPIView):
