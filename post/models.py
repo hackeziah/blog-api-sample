@@ -17,7 +17,7 @@ def name_path_file(path, filename):
 
 
 def upload_to_profile(instance, filename):
-    return name_path_file('images/profile/', filename)
+    return name_path_file('images/profiles/', filename)
 
 def upload_to_categories(instance, filename):
     return name_path_file('images/categories/', filename)
