@@ -76,6 +76,18 @@ class Profile(BaseModel):
     def __str__(self):
         return f"{self.user.last_name}, {self.user.first_name}"
 
+    @property
+    def get_profile_pic(self):
+        try:
+            if self.avatar.url == '/media/images/profile/default.jpg':
+                return '/static/profiles/default.jpg'
+            elif self.avatar.url == '/media/None':
+                return '/static/profiles/default.jpg'
+            else:
+                return self.avatar.url
+        except:
+            return '/static/profiles/default.jpg'
+
 
 class Blog(BaseModel):
     title = models.CharField(max_length=100, unique=True)

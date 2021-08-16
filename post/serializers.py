@@ -17,18 +17,73 @@ class CategorySerializers(serializers.ModelSerializer):
         fields = '__all__'
 
 
-class ProfileSerializers(serializers.ModelSerializer):
+class ProfileMiniSerializers(serializers.ModelSerializer):
+    avatar = serializers.SerializerMethodField('get_avatar')
+    full_name = serializers.SerializerMethodField('get_full_name')
+
+    def get_full_name(self, obj):
+        return f'{obj.user.first_name} {obj.user.last_name}'
+
+    def __init__(self, *args, **kwargs):
+        context = kwargs.get('context', {})
+        self.request = context.get('request', None)
+        super(ProfileMiniSerializers, self).__init__(*args, **kwargs)
+
+    def get_avatar(self, obj: Profile):
+        request = self.context.get("request")
+        if not request:
+            return obj.get_profile_pic
+        return request.build_absolute_uri(obj.get_profile_pic)
+
     class Meta:
         model = Profile
-        fields = ('bio', 'birth_date', 'gender', 'location', 'user', 'avatar',)
+        fields = ('bio', 'birth_date', 'gender', 'location', 'user', 'avatar', 'full_name')
+
+
+class ProfileSerializers(serializers.ModelSerializer):
+    avatar = serializers.SerializerMethodField('get_avatar')
+    full_name = serializers.SerializerMethodField('get_full_name')
+
+    def __init__(self, *args, **kwargs):
+        context = kwargs.get('context', {})
+        self.request = context.get('request', None)
+        super(ProfileSerializers, self).__init__(*args, **kwargs)
+
+    def get_full_name(self, obj: Profile):
+        return f'{obj.user.first_name}, {obj.user.last_name}'
+
+    def get_avatar(self, obj):
+        if not self.request:
+            return obj.get_profile_pic
+        else:
+            return self.request.build_absolute_uri(obj.get_profile_pic)
+
+
+    class Meta:
+        model = Profile
+        fields = ('bio', 'birth_date', 'gender', 'location', 'user', 'avatar', 'full_name')
+
+
+class CategoryMiniSerializers(serializers.ModelSerializer):
+    class Meta:
+        model = Categories
+        fields = ('id','name',)
 
 
 class BlogSerializers(serializers.ModelSerializer):
-    image = serializers.ImageField()
+    image = serializers.ImageField(required=False)
+    profile = ProfileMiniSerializers(read_only=True)
+    category = CategoryMiniSerializers(read_only=True)
 
     class Meta:
         model = Blog
-        fields = ('title', 'content', 'image', 'category', 'tags', 'profile',)
+        fields = ('id','title', 'content', 'image', 'category', 'tags', 'profile', 'created_at')
+
+
+class BlogMiniSerializers(serializers.ModelSerializer):
+    class Meta:
+        model = Blog
+        fields = ('id', 'title', 'content', 'image', 'category', 'tags', 'created_at')
 
 
 class CreateUserSerializer(serializers.Serializer):
