@@ -3,6 +3,5 @@ env/
 *.sqlite3
 .idea/
 .DS_Store
-/media/
-/static/
+#/media/
 /venv/
