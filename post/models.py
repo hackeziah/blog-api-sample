@@ -90,6 +90,8 @@ class Profile(BaseModel):
 
 
 class Blog(BaseModel):
+    class Meta:
+        ordering = ('-created_at',)
     title = models.CharField(max_length=100, unique=True)
     content = models.TextField(max_length=255)
     image = models.ImageField(upload_to=upload_to_blog, null=True, blank=True)
