@@ -24,6 +24,8 @@ class ProfileSerializers(serializers.ModelSerializer):
 
 
 class BlogSerializers(serializers.ModelSerializer):
+    image = serializers.ImageField()
+
     class Meta:
         model = Blog
         fields = ('title', 'content', 'image', 'category', 'tags', 'profile',)

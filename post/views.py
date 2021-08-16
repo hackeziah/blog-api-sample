@@ -4,8 +4,13 @@ from rest_framework.generics import CreateAPIView, RetrieveUpdateAPIView, ListAP
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.response import Response
 
-from post.models import Profile, Categories
-from post.serializers import ProfileSerializers, CategorySerializers, CreateUserSerializer
+from post.models import Profile, Categories, Tags, Blog
+from post.serializers import ProfileSerializers, CategorySerializers, CreateUserSerializer, BlogSerializers
+
+
+class BlogList(ListAPIView):
+    serializer_class = BlogSerializers
+    queryset = Blog.objects.all()
 
 
 class CategoriesViewCreateUpdate(ListAPIView):
@@ -67,3 +72,49 @@ class ProfileDetailUpdate(RetrieveUpdateAPIView):
 class CreateUser(CreateAPIView, TokenView):
     serializer_class = CreateUserSerializer
     permission_classes = (AllowAny,)
+
+
+class BlogCreate(CreateAPIView, ):
+    serializer_class = BlogSerializers
+    permission_classes = (IsAuthenticated,)
+
+    def post(self, request, *args, **kwargs):
+        user = request.user
+        data = request.data
+        category = data.get('category')
+        tags = data.get('tags')
+        try:
+            profile = Profile.objects.get(user=user)
+        except Profile.DoesNotExist:
+            return Response(status=status.HTTP_401_UNAUTHORIZED)
+        try:
+            category = Categories.objects.get(id=category)
+        except Tags.DoesNotExist:
+            data = {
+                'status': False,
+                'code': 404,
+                "message": "Tags not exist"
+            }
+            return Response(data, status=status.HTTP_404_NOT_FOUND)
+
+        blog = Blog.objects.create(
+            profile=profile,
+            title=data.get('title'),
+            content=data.get('content'),
+            image=data.get('image'),
+            category=category,
+        )
+        if tags is not None:
+            for tag_name in tags:
+                tag_instance = Tags.objects.filter(name=tag_name).first()
+                if not tag_instance:
+                    tag_instance = Tags.objects.create(name=tag_name)
+                blog.tags.add(tag_instance)
+        blog.save()
+        serializer = BlogSerializers(blog, many=False)
+        data = {
+            'status': 'success',
+            'code': status.HTTP_200_OK,
+            "data": serializer.data
+        }
+        return Response(data, status=status.HTTP_200_OK)
