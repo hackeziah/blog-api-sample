@@ -1,6 +1,6 @@
 from oauth2_provider.views import TokenView
 from rest_framework import status
-from rest_framework.generics import CreateAPIView, RetrieveUpdateAPIView, ListAPIView
+from rest_framework.generics import CreateAPIView, RetrieveUpdateAPIView, ListAPIView, RetrieveUpdateDestroyAPIView
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.response import Response
 
@@ -118,3 +118,81 @@ class BlogCreate(CreateAPIView, ):
             "data": serializer.data
         }
         return Response(data, status=status.HTTP_200_OK)
+
+
+class BlogUpdateViewDestroy(RetrieveUpdateDestroyAPIView):
+    serializer_class = BlogSerializers
+    permission_classes = (IsAuthenticated,)
+    queryset = Blog.objects.all()
+
+    def get_object(self):
+        id = self.kwargs["id"]
+        blog = Blog.objects.get(id=id)
+        return blog
+
+    def get(self, request, *args, **kwargs):
+        id = self.kwargs["id"]
+        try:
+            blog = Blog.objects.get(id=id)
+        except Blog.DoesNotExist:
+            data = {
+                'status': False,
+                'code': status.HTTP_404_NOT_FOUND,
+                'message': 'Blog Not Found!'
+            }
+            return Response(data, status=status.HTTP_404_NOT_FOUND)
+
+        serializer = BlogSerializers(blog, context={'request': self.request})
+        return Response(serializer.data)
+
+    def put(self, request, *args, **kwargs):
+        user = request.user
+        id = self.kwargs["id"]
+        try:
+            blog = Blog.objects.get(id=id)
+        except Blog.DoesNotExist:
+            data = {
+                'status': False,
+                'code': status.HTTP_404_NOT_FOUND,
+                'message': 'Blog Not Found!'
+            }
+            return Response(data, status=status.HTTP_404_NOT_FOUND)
+
+        if blog.profile.user == user:
+            self.update(request, *args, **kwargs)
+            my_blog = Blog.objects.get(id=blog.pk)
+            serializer = BlogSerializers(my_blog, context={'request': self.request})
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        data = {
+            'status': 'failed',
+            'code': status.HTTP_401_UNAUTHORIZED,
+            'message': 'Your not authorized to edit this!'
+        }
+        return Response(data, status=status.HTTP_401_UNAUTHORIZED)
+
+    def delete(self, request, *args, **kwargs):
+        user = self.request.user
+        id = self.kwargs["id"]
+        try:
+            blog = Blog.objects.get(id=id)
+        except Blog.DoesNotExist:
+            data = {
+                'status': False,
+                'code': status.HTTP_404_NOT_FOUND,
+                'message': 'Blog Not Found!'
+            }
+            return Response(data, status=status.HTTP_404_NOT_FOUND)
+        if blog.profile.user == user:
+            self.destroy(request, *args, **kwargs)
+            data = {
+                'status': 'success',
+                'code': status.HTTP_200_OK,
+                'message': 'Blog is successfully deleted!'
+            }
+            return Response(data, status=status.HTTP_200_OK)
+        data = {
+            'status': 'failed',
+            'code': status.HTTP_401_UNAUTHORIZED,
+            'message': 'Your not authorized to delete this!'
+        }
+        return Response(data, status=status.HTTP_401_UNAUTHORIZED)

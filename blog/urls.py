@@ -14,6 +14,8 @@ Including another URLconf
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
 
+import django
+from django.conf.urls.static import static
 from django.contrib import admin
 from django.urls import path, include
 
@@ -25,3 +27,4 @@ urlpatterns = [
     path('o/', include('oauth2_provider.urls', namespace='oauth2_provider')),
     path('o/login/', TokenViewWithUserInfo.as_view(), name='login'),
 ]
+urlpatterns += static(django.conf.settings.MEDIA_URL, document_root=django.conf.settings.MEDIA_ROOT)
